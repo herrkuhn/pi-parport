@@ -8,7 +8,9 @@
  *
  * A PC parallel port style interface is cobbled together from GPIO pins:
  * 8-bit data out, 5-bit status in, 4 bit control out
- * No interrupts or dma; SPP mode only.
+ * SPP, EPP (software emulation), ECP (software emulation),
+ * and bidirectional (tristate) modes. No interrupts or DMA.
+ * Tristate requires v2+ hardware with SN74LVC161284 DIR pin.
  *
  * See https://lwn.net/Articles/533632/ for info on the gpiod_ API used here.
  */
@@ -394,7 +396,9 @@ static int parport_gpio_probe(struct platform_device *op)
 		goto out_detach;
 	}
 	p->private_data = ctx;
-	p->modes = PARPORT_MODE_PCSPP;
+	p->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_EPP | PARPORT_MODE_ECP;
+	if (ctx->dir)
+		p->modes |= PARPORT_MODE_TRISTATE;
 	p->dev = &op->dev;
 
 	dev_set_drvdata(&op->dev, p);
@@ -402,6 +406,7 @@ static int parport_gpio_probe(struct platform_device *op)
 	parport_gpio_print_info(p);
 
 	parport_announce_port(p);
+	parport_write_control(p, PARPORT_CONTROL_INIT);
 	return 0;
 out_detach:
 	parport_gpio_detach(ctx);
