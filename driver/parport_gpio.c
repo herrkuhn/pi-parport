@@ -23,6 +23,7 @@
 #include <linux/gpio/consumer.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
+#include <linux/platform_device.h>
 
 struct parport_gpio_ctx {
 	struct gpio_descs *data;
@@ -422,7 +423,7 @@ out:
 	return -1;
 }
 
-static int parport_gpio_remove(struct platform_device *op)
+static void parport_gpio_remove(struct platform_device *op)
 {
 	struct parport *p = dev_get_drvdata(&op->dev);
 
@@ -433,8 +434,6 @@ static int parport_gpio_remove(struct platform_device *op)
 	parport_del_port(p);
 
 	dev_set_drvdata(&op->dev, NULL);
-
-	return 0;
 }
 
 static const struct of_device_id parport_gpio_match[] = {

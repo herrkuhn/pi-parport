@@ -3,8 +3,8 @@
 # Note that we use a custom Makefile to build these files together.
 # mkdir parport/
 
-KSRC_VER=`dpkg -s raspberrypi-kernel | grep Version | cut -d' ' -f2`
-BRANCH=raspberrypi-kernel_$KSRC_VER
+KVER=`uname -r | grep -oP '^\d+\.\d+'`
+BRANCH=rpi-${KVER}.y
 git clone --depth 1 --single-branch --branch $BRANCH --no-checkout \
   https://github.com/raspberrypi/linux.git
 cd linux
