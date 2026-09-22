@@ -43,43 +43,49 @@ the parport driver stack.  If your application is a printer, go for it.
 
 ### Building the driver
 
-For convenience, the generic parport code is duplicated in this repo,
-since the Raspberry Pi Foundation does not ship the compiled modules
-in the `raspberrypi-kernel` package (at least in old Raspbian
-versions).  If you are intending to use a specific old version of
-Raspbian, there is the shell script `get_parport_src.sh` to assist
-you in getting the code from that particular version.
+For convenience, the generic parport code from the Raspberry Pi kernel
+tree is duplicated in `driver/parport/`, since Raspberry Pi OS does not
+enable `CONFIG_PARPORT` in its kernels. If a future kernel changes the parport subsystem,
+run `driver/get_parport_src.sh` on the Pi to refresh the copy from the
+branch matching the running kernel.
 
 Clone this repo, then run the following with `${TOPDIR}` representing the
 top level directory of the cloned repo:
 ```console
-$ sudo apt install build-essential raspberrypi-kernel-headers
+$ sudo apt install build-essential linux-headers-rpi-v8
 $ cd ${TOPDIR}/driver
 $ make
-make -C /lib/modules/4.19.75-v7+/build M=${TOPDIR}/driver modules
-make[1]: Entering directory '/usr/src/linux-headers-4.19.75-v7+'
-  CC [M]  ${TOPDIR}/driver/parport/share.o
-  CC [M]  ${TOPDIR}/driver/parport/ieee1284.o
-  CC [M]  ${TOPDIR}/driver/parport/ieee1284_ops.o
-  CC [M]  ${TOPDIR}/driver/parport/procfs.o
-  CC [M]  ${TOPDIR}/driver/parport/daisy.o
-  CC [M]  ${TOPDIR}/driver/parport/probe.o
-  LD [M]  ${TOPDIR}/driver/parport/parport.o
-  CC [M]  ${TOPDIR}/driver/parport/lp.o
-  CC [M]  ${TOPDIR}/driver/parport/ppdev.o
-  CC [M]  ${TOPDIR}/driver/parport_gpio.o
-  Building modules, stage 2.
-  MODPOST 4 modules
-  CC      ${TOPDIR}/driver/parport/lp.mod.o
-  LD [M]  ${TOPDIR}/driver/parport/lp.ko
-  CC      ${TOPDIR}/driver/parport/parport.mod.o
-  LD [M]  ${TOPDIR}/driver/parport/parport.ko
-  CC      ${TOPDIR}/driver/parport/ppdev.mod.o
-  LD [M]  ${TOPDIR}/driver/parport/ppdev.ko
-  CC      ${TOPDIR}/driver/parport_gpio.mod.o
-  LD [M]  ${TOPDIR}/driver/parport_gpio.ko
-make[1]: Leaving directory '/usr/src/linux-headers-4.19.75-v7+'
+make -C /lib/modules/6.18.50+rpt-rpi-v8/build M=${TOPDIR}/driver modules
+building against 6.18.50+rpt-rpi-v8
+make: Entering directory '${TOPDIR}/driver'
+make -C /lib/modules/6.18.50+rpt-rpi-v8/build M=${TOPDIR}/driver modules
+make[1]: Entering directory '/usr/src/linux-headers-6.18.50+rpt-rpi-v8'
+make[2]: Entering directory '${TOPDIR}/driver'
+  CC [M]  parport_gpio.o
+  CC [M]  parport/share.o
+  CC [M]  parport/ieee1284.o
+  CC [M]  parport/ieee1284_ops.o
+  CC [M]  parport/procfs.o
+  CC [M]  parport/daisy.o
+  CC [M]  parport/probe.o
+  LD [M]  parport/parport.o
+  CC [M]  parport/lp.o
+  CC [M]  parport/ppdev.o
+  MODPOST Module.symvers
+  CC [M]  parport/parport.mod.o
+  CC [M]  .module-common.o
+  LD [M]  parport/parport.ko
+  CC [M]  parport/lp.mod.o
+  LD [M]  parport/lp.ko
+  CC [M]  parport/ppdev.mod.o
+  LD [M]  parport/ppdev.ko
+  CC [M]  parport_gpio.mod.o
+  LD [M]  parport_gpio.ko
+make[2]: Leaving directory '${TOPDIR}/driver'
+make[1]: Leaving directory '/usr/src/linux-headers-6.18.50+rpt-rpi-v8'
 ```
+The headers must match the running kernel; after
+a kernel upgrade, reboot, reinstall the headers if needed, and rebuild.
 
 ### Installing the Device Tree Overlay
 
@@ -93,7 +99,7 @@ $ sudo make install
 The ID EEPROM stores the name of the DT Overlay to use, and the
 corresponding DT Overlay will be automatically loaded on boot.  If you
 will not be using an ID EEPROM, then add the following line to
-`/boot/config.txt`:
+`/boot/firmware/config.txt`:
 ```
 dtoverlay=parport-gpio
 ```
@@ -143,11 +149,11 @@ You'll see the port announce itself on the console:
 ```
 If you wish to set up a parallel printer:
 ```console
-$ sudo insmod parport/lp.ko
+$ sudo insmod driver/parport/lp.ko
 ```
 If you wish to run user-space programs that use the parallel port:
 ```console
-$ sudo insmod parport/ppdev.ko
+$ sudo insmod driver/parport/ppdev.ko
 ```
 
 ### hardware
